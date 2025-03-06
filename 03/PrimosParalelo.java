@@ -40,7 +40,7 @@ public class PrimosParalelo {
         System.out.println("🔴 Dependendo do intervalo informado, a aplicação pode gerar sobre carga de processamento e eventualmente travar!");
 
         while (true) {
-            System.out.print("✏️ ");
+            System.out.print(" ");
             if (!sc.hasNextInt()) {
                 System.out.println("🚨 Valor inválido. Tente novamente!");
                 sc.nextLine();
