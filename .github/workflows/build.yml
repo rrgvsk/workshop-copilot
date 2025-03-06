@@ -16,6 +16,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Set Java UTF-8 encoding
+      run: echo "JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8" >> $GITHUB_ENV
+
     - name: Build with Gradle
       run: ./gradlew build
       working-directory: ./03
