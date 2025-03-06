@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whack-a-Mole</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .game-container {
+            text-align: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 10px;
+            margin-top: 20px;
+        }
+
+        .hole {
+            width: 100px;
+            height: 100px;
+            background-color: #8b4513;
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .active {
+            background-color: #000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            animation: confetti-fall 1s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0) translateX(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(var(--translateY)) translateX(var(--translateX)) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Whack-a-Mole</h1>
+        <div class="score">Pontuação: <span id="score">0</span></div>
+        <div class="timer">Tempo Restante: <span id="timer">30</span> segundos</div>
+        <div class="grid">
+            <div class="hole" id="hole1"></div>
+            <div class="hole" id="hole2"></div>
+            <div class="hole" id="hole3"></div>
+            <div class="hole" id="hole4"></div>
+            <div class="hole" id="hole5"></div>
+            <div class="hole" id="hole6"></div>
+            <div class="hole" id="hole7"></div>
+            <div class="hole" id="hole8"></div>
+            <div class="hole" id="hole9"></div>
+        </div>
+        <div id="game-over" class="hidden">
+            <h2>Fim de Jogo!</h2>
+            <p>Sua pontuação final é: <span id="final-score">0</span></p>
+            <button id="restart-button">Reiniciar Jogo</button>
+        </div>
+        <button id="help-button">Como Jogar</button>
+    </div>
+
+    <!-- O Modal -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Como Jogar</h2>
+            <p>Bem-vindo ao Whack-a-Mole!</p>
+            <p>O objetivo do jogo é clicar nas toupeiras que aparecem nos buracos. Cada vez que você clicar em uma toupeira, você ganha um ponto.</p>
+            <p>O jogo dura 30 segundos. Tente marcar o maior número de pontos possível antes que o tempo acabe.</p>
+            <p>Boa sorte e divirta-se!</p>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let activeHole = null;
+        let timeLeft = 30;
+        let gameInterval;
+        let moleInterval;
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const gameOverDisplay = document.getElementById('game-over');
+        const restartButton = document.getElementById('restart-button');
+        const helpButton = document.getElementById('help-button');
+        const helpModal = document.getElementById('help-modal');
+        const closeModal = document.querySelector('.close');
+        const holes = document.querySelectorAll('.hole');
+
+        function randomHole() {
+            const index = Math.floor(Math.random() * holes.length);
+            return holes[index];
+        }
+
+        function showMole() {
+            if (activeHole) {
+                activeHole.classList.remove('active');
+                activeHole.style.backgroundColor = '#8b4513';
+            }
+            activeHole = randomHole();
+            activeHole.classList.add('active');
+            activeHole.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        }
+
+        function whack(event) {
+            if (event.target.classList.contains('active')) {
+                score++;
+                scoreDisplay.textContent = score;
+                activeHole.classList.remove('active');
+                activeHole.style.backgroundColor = '#8b4513';
+                activeHole = null;
+                if (score % 10 === 0) {
+                    triggerConfetti();
+                }
+            }
+        }
+
+        function triggerConfetti() {
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${centerX}px`;
+                confetti.style.top = `${centerY}px`;
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.setProperty('--translateX', `${(Math.random() - 0.5) * 200}px`);
+                confetti.style.setProperty('--translateY', `${(Math.random() - 0.5) * 200}px`);
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 1000);
+            }
+        }
+
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = timeLeft;
+            gameOverDisplay.classList.add('hidden');
+
+            gameInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(gameInterval);
+                    clearInterval(moleInterval);
+                    gameOver();
+                } else {
+                    timeLeft--;
+                    timerDisplay.textContent = timeLeft;
+                }
+            }, 1000);
+
+            moleInterval = setInterval(showMole, 1000);
+        }
+
+        function gameOver() {
+            holes.forEach(hole => {
+                hole.classList.remove('active');
+                hole.style.backgroundColor = '#8b4513';
+            });
+            gameOverDisplay.classList.remove('hidden');
+            finalScoreDisplay.textContent = score;
+        }
+
+        restartButton.addEventListener('click', startGame);
+        helpButton.addEventListener('click', () => {
+            helpModal.style.display = 'block';
+        });
+        closeModal.addEventListener('click', () => {
+            helpModal.style.display = 'none';
+        });
+        window.addEventListener('click', (event) => {
+            if (event.target == helpModal) {
+                helpModal.style.display = 'none';
+            }
+        });
+        holes.forEach(hole => hole.addEventListener('click', whack));
+
+        startGame();
+    </script>
+</body>
+</html>
