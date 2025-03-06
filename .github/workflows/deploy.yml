@@ -25,7 +25,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./01
           publish_branch: gh-pages
 
       - name: Clean up
